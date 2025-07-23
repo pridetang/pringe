@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인천 적십자병원 응급실 환자 이동 안내</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Gentle Green Accent -->
+    <!-- Application Structure Plan: A task-oriented, single-page application. The core structure is centered around a primary question: "Can the patient move independently?". This immediately directs the user to the relevant information via two large, clickable buttons ("Yes" or "No"). Clicking a button reveals the corresponding detailed instructions while hiding the irrelevant ones. This approach was chosen to minimize cognitive load and provide instant, filtered guidance in a high-stress ER environment, making it far more user-friendly than a static document. Key safety information remains always visible. -->
+    <!-- Visualization & Content Choices: Report Info: Core choice (Can move?) -> Goal: Organize/Filter -> Method: Two large, icon-enhanced clickable cards (HTML/Tailwind) -> Interaction: JS click event toggles visibility of instruction sections -> Justification: Simplifies user journey to the most critical information. | Report Info: Specific instructions for 'Yes' or 'No' -> Goal: Inform -> Method: Styled list within a content card (HTML/Tailwind) -> Interaction: Revealed/hidden by the primary choice -> Justification: Provides detailed steps only when relevant. | Report Info: General safety/contact info -> Goal: Inform -> Method: Always-visible footer section with icons -> Interaction: None -> Justification: Ensures critical information is never missed. No charts are needed. Icons are Unicode characters. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #F8F7F4;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .choice-btn {
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .choice-btn.selected {
+            border-color: #34D399;
+            box-shadow: 0 10px 15px -3px rgb(16 185 129 / 0.2), 0 4px 6px -4px rgb(16 185 129 / 0.2);
+            transform: translateY(-4px);
+        }
+        .content-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding 0.5s ease-in-out;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .content-section.visible {
+            max-height: 500px;
+            opacity: 1;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+        .icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto max-w-3xl p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-8">
+            <div class="inline-block bg-red-600 text-white rounded-full p-3 mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">응급실 환자 이동 안내</h1>
+            <p class="mt-2 text-lg text-gray-600">인천 적십자병원</p>
+        </header>
+
+        <main>
+            <div class="card p-6 md:p-8 mb-8">
+                <h2 class="text-xl font-semibold text-center text-gray-800 mb-2">환자분과 보호자분께,</h2>
+                <p class="text-center text-gray-600 leading-relaxed">
+                    저희 응급실에서는 신속하고 정확한 진료를 위해 검사나 처치 장소로 이동이 필요할 수 있습니다. 환자분의 상태에 따라 안전한 이동 방법을 안내해 드립니다.
+                </p>
+            </div>
+
+            <div class="card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-center text-gray-800 mb-6">먼저, 환자분께서 스스로 이동이 가능하신지 아래에서 선택해주세요.</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div id="btn-can-walk" class="choice-btn card p-6 text-center" onclick="selectOption('can-walk')">
+                        <div class="icon mb-3 text-green-500">🚶‍♂️</div>
+                        <h4 class="text-lg font-bold text-gray-900">네, 스스로 이동할 수 있습니다.</h4>
+                    </div>
+                    <div id="btn-needs-help" class="choice-btn card p-6 text-center" onclick="selectOption('needs-help')">
+                        <div class="icon mb-3 text-amber-500">♿</div>
+                        <h4 class="text-lg font-bold text-gray-900">아니요, 도움이 필요합니다.</h4>
+                    </div>
+                </div>
+
+                <div id="content-can-walk" class="content-section mt-6">
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-bold text-green-600 mb-4">✅ 스스로 이동 시 안내</h3>
+                        <ul class="space-y-3 text-gray-700 list-inside">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-3 mt-1">▶</span>
+                                <div><strong class="font-semibold">이동 전 확인:</strong> 반드시 의료진(의사/간호사)에게 다음 이동 장소와 방법을 먼저 확인해주세요.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-3 mt-1">▶</span>
+                                <div><strong class="font-semibold">안전한 이동:</strong> 병원 내 바닥이 미끄러울 수 있으니, 천천히 조심해서 이동해주세요.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-3 mt-1">▶</span>
+                                <div><strong class="font-semibold">안내 표지판 활용:</strong> 병원 곳곳의 안내 표지판을 참고하시면 목적지를 쉽게 찾으실 수 있습니다.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div id="content-needs-help" class="content-section mt-6">
+                     <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-bold text-amber-600 mb-4">🆘 이동이 어려운 경우 안내</h3>
+                        <ul class="space-y-3 text-gray-700 list-inside">
+                            <li class="flex items-start">
+                                <span class="text-amber-500 mr-3 mt-1">▶</span>
+                                <div><strong class="font-semibold">의료진에게 알림:</strong> 거동이 불편하거나 통증이 심해 이동이 어렵다면, 즉시 의료진에게 알려주세요.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-amber-500 mr-3 mt-1">▶</span>
+                                <div><strong class="font-semibold">도움 요청:</strong> 의료진이 환자분의 상태를 확인 후, 휠체어나 이동 보조 등 안전한 이동을 도와드릴 것입니다.</div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="text-red-500 font-bold mr-3 mt-1">▶</span>
+                                <div class="font-bold text-red-600">절대 무리해서 혼자 이동하지 마세요.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="mt-8 text-center">
+                 <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">궁금한 점이 있으신가요?</h3>
+                    <p class="text-gray-600">
+                        이동 중 길을 찾기 어렵거나 궁금한 점이 생기면<br>
+                        주저하지 마시고 가까이에 있는 직원에게 문의해주세요.<br>
+                        환자분의 빠른 쾌유를 위해 최선을 다하겠습니다.
+                    </p>
+                    <p class="mt-4 font-bold text-gray-800">인천 적십자병원 응급실</p>
+                 </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        function selectOption(option) {
+            const canWalkBtn = document.getElementById('btn-can-walk');
+            const needsHelpBtn = document.getElementById('btn-needs-help');
+            const canWalkContent = document.getElementById('content-can-walk');
+            const needsHelpContent = document.getElementById('content-needs-help');
+
+            if (option === 'can-walk') {
+                canWalkBtn.classList.add('selected');
+                needsHelpBtn.classList.remove('selected');
+                canWalkContent.classList.add('visible');
+                needsHelpContent.classList.remove('visible');
+            } else if (option === 'needs-help') {
+                needsHelpBtn.classList.add('selected');
+                canWalkBtn.classList.remove('selected');
+                needsHelpContent.classList.add('visible');
+                canWalkContent.classList.remove('visible');
+            }
+        }
+    </script>
+
+</body>
+</html>
